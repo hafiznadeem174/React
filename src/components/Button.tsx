@@ -3,9 +3,10 @@ interface ButtonProps {
     children: React.ReactNode;
     onClick?: () => void;
     variant?: 'primary' | 'secondary' | 'danger';
+    type?: 'button' | 'submit' | 'reset';
 }
 const Button =
-    ({ children, onClick, variant = 'primary' }: ButtonProps) => {
+    ({ children, onClick, variant = 'primary', type = 'button' }: ButtonProps) => {
         const baseStyle = 'px-4 py-2 rounded font-medium';
         const variants = {
             primary: 'bg-blue-600 text-white',
@@ -13,7 +14,7 @@ const Button =
             danger: 'bg-red-600 text-white hover:bg-red-700',
         };
         return (
-            <button onClick={onClick} className={`${baseStyle} ${variants[variant]}`}>
+            <button  type={type} onClick={onClick} className={`${baseStyle} ${variants[variant]}`}>
                 {children}
             </button>
         );
