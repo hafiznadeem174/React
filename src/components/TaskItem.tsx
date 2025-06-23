@@ -1,118 +1,108 @@
-
 import { useState } from 'react';
 import type { Task } from '../types';
-import Button from './Button.tsx';
-import ControlledInputField from './ControlledInputField.tsx';
+import Button from './Button';
+import ControlledInputField from './ControlledInputField';
+import type { ControlledInputFieldProps } from './ControlledInputField';
 interface Props {
     task: Task;
     onEdit: (updatedTask: Task) => void;
     onDelete: (id: string) => void;
 }
+const getFileNameFromDataUrl = (attachment: string, taskId: string) => {
+    const mimeType = attachment.split(';')[0].split(':')[1];
+    return mimeType === 'application/pdf' ? `task-${taskId}.pdf` : `task-${taskId}.pdf`;
+};
 const TaskItem = ({ task, onEdit, onDelete }: Props) => {
     const [isEditing, setIsEditing] = useState(false);
-    const [editTitle, setEditTitle] = useState(task.title);
-    const [editDueDate, setEditDueDate] = useState(task.dueDate);
-    const [editStatus, setEditStatus] = useState<Task['status']>(task.status);
-    const [editEmail, setEditEmail] = useState(task.email);
-    const [editPhoneNumber, setEditPhoneNumber] = useState(task.phoneNumber);
-    const [editUrl, setEditUrl] = useState(task.url);
-    const [editIsUrgent, setEditIsUrgent] = useState(task.isUrgent);
-    const [editPriority, setEditPriority] = useState<Task['priority']>(task.priority);
-    const [priorityError, setPriorityError] = useState<string | null>(null);
-    const [urlError, setUrlError] = useState<string | null>(null);
-    const [titleError, setTitleError] = useState<string | null>(null);
-    const [dueDateError, setDueDateError] = useState<string | null>(null);
-    const [phoneNumberError, setPhoneNumberError] = useState<string | null>(null);
-    const [emailError, setEmailError] = useState<string | null>(null);
-
-    const validateTitle = (title: string) => {
-        if (title.length < 3) {
-            return 'Task title must be at least 3 characters';
+    const [editValues, setEditValues] = useState<Task>({ ...task });
+    const [errors, setErrors] = useState<Partial<Record<keyof Task, string>>>({});
+    const validateField = (name: keyof Task, value: Task[keyof Task]): string | null => {
+        switch (name) {
+            case 'title': {
+                const title = value as string;
+                if (title.length < 3) return 'Task title must be at least 3 characters';
+                if (title.length > 50) return 'Task title cannot exceed 50 characters';
+                return null;
+            }
+            case 'dueDate': {
+                const today = new Date().toISOString().split('T')[0];
+                const dueDate = value as string;
+                if (dueDate < today) return 'Due date cannot be in the past';
+                return null;
+            }
+            case 'email': {
+                const email = value as string;
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return 'Invalid email format';
+                return null;
+            }
+            case 'phoneNumber': {
+                const phoneNumber = value as string;
+                if (!/^\+?[1-9]\d{1,14}$|^\d{3}-\d{3}-\d{4}$/.test(phoneNumber))
+                    return 'Invalid phone number format (e.g., 123-456-7890 or +12345678901)';
+                return null;
+            }
+            case 'url': {
+                const url = value as string;
+                if (!/^(https?:\/\/)[^\s/$.?#].[^\s]*$/.test(url))
+                    return 'Invalid URL format (e.g., https://example.com)';
+                return null;
+            }
+            case 'priority': {
+                const priority = value as Task['priority'];
+                if (!['Low', 'Medium', 'High'].includes(priority)) return 'Invalid priority';
+                return null;
+            }
+            case 'progress': {
+                const progress = value as number;
+                if (progress < 0 || progress > 100) return 'Progress must be between 0 and 100';
+                return null;
+            }
+            case 'attachment': {
+                const attachment = value as string;
+                if (!attachment) return 'Attachment is required';
+                if (attachment.startsWith('data:') && !attachment.includes('application/pdf'))
+                    return 'Only PDF files are allowed';
+                return null;
+            }
+            case 'color': {
+                const color = value as string;
+                if (!color) return 'Color is required';
+                if (!/^#[0-9A-Fa-f]{6}$/.test(color)) return 'Invalid hex color (e.g., #FF0000)';
+                return null;
+            }
+            case 'status': {
+                const status = value as Task['status'];
+                if (!['Pending', 'In Progress', 'Completed'].includes(status)) return 'Invalid status';
+                return null;
+            }
+            default:
+                return null;
         }
-        if (title.length > 50) {
-            return 'Task title cannot exceed 50 characters';
-        }
-        return null;
     };
-
-    const validateDueDate = (dueDate: string) => {
-        const today = new Date().toISOString().split('T')[0];
-        if (dueDate < today) {
-            return 'Due date cannot be in the past';
-        }
-        return null;
+    const handleChange = (name: keyof Task, value: string | boolean | number) => {
+        setEditValues((prev) => ({ ...prev, [name]: value }));
+        setErrors((prev) => ({ ...prev, [name]: validateField(name, value) }));
     };
-    const validateUrl = (url: string) => {
-        const urlRegex = /^(https?:\/\/)[^\s/$.?#].[^\s]*$/;
-        if (!urlRegex.test(url)) {
-            return 'Invalid URL format (e.g., https://example.com)';
-        }
-        return null;
-    };
-    const validateEmail = (email: string) => {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            return 'Invalid email format';
-        }
-        return null;
-    };
-    const validatePriority = (priority: string) => {
-        if (!['Low', 'Medium', 'High'].includes(priority)) {
-            return 'Priority is required';
-        }
-        return null;
-    };
-    // const validatePhoneNumber = (phoneNumber: string) => {
-    //     const phoneRegex = /^\+?[1-9]\d{1,14}$|^\d{3}-\d{3}-\d{4}$/;
-    //     if (!phoneRegex.test(phoneNumber)) {
-    //         return 'Invalid phone number format (e.g., 123-456-7890 or +12345678901)';
-    //     }
-    //     return null;
-    // };
-    const validatePhoneNumber = (phoneNumber: string) => {
-        const phoneRegex = /^\+?[1-9]\d{1,14}$|^\d{3}-\d{3}-\d{4}$/;
-        if (!phoneRegex.test(phoneNumber)) {
-            return 'Invalid phone number format (e.g., 123-456-7890 or +12345678901)';
-        }
-        return null;
-    };
-
     const handleSave = () => {
-        const titleError = validateTitle(editTitle);
-        const dueDateError = validateDueDate(editDueDate);
-        const emailError = validateEmail(editEmail);
-        const phoneNumberError = validatePhoneNumber(editPhoneNumber);
-        const urlError = validateUrl(editUrl);
-        const priorityError = validatePriority(editPriority);
-        if (titleError || dueDateError || emailError || phoneNumberError || urlError || priorityError) {
-            setTitleError(titleError);
-            setDueDateError(dueDateError);
-            setEmailError(emailError);
-            setPhoneNumberError(phoneNumberError);
-            setUrlError(urlError);
-            setPriorityError(priorityError);
+        const newErrors: Partial<Record<keyof Task, string>> = {};
+        (Object.keys(editValues) as (keyof Task)[]).forEach((key) => {
+            const error = validateField(key, editValues[key]);
+            if (error) newErrors[key] = error;
+        });
+
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
             return;
         }
-        onEdit({
-            ...task,
-            title: editTitle,
-            dueDate: editDueDate,
-            status: editStatus,
-            email: editEmail,
-            phoneNumber: editPhoneNumber,
-            url: editUrl,
-            isUrgent: editIsUrgent,
-            priority: editPriority,
-        });
-        setTitleError(null);
-        setDueDateError(null);
-        setEmailError(null);
-        setPhoneNumberError(null);
-        setUrlError(null);
-        setPriorityError(null);
+        onEdit(editValues);
+        setErrors({});
         setIsEditing(false);
     };
-
+    const handleCancel = () => {
+        setEditValues({ ...task });
+        setErrors({});
+        setIsEditing(false);
+    };
     const getStatusColor = () => {
         switch (task.status) {
             case 'Completed':
@@ -123,171 +113,55 @@ const TaskItem = ({ task, onEdit, onDelete }: Props) => {
                 return 'bg-red-100 border-red-500';
         }
     };
+    const inputFields: {
+        name: keyof Task;
+        label: string;
+        type?: ControlledInputFieldProps['type'];
+        placeholder?: string;
+        options?: string[];
+        min?: number;
+        max?: number;
+        accept?: string;
+    }[] = [
+        { name: 'title', label: 'Task Title', placeholder: 'Enter task title' },
+        { name: 'dueDate', label: 'Due Date', type: 'date' },
+        { name: 'email', label: 'Email', type: 'email' },
+        { name: 'phoneNumber', label: 'Phone Number', placeholder: 'e.g., 123-456-7890 or +12345678901' },
+        { name: 'url', label: 'URL', type: 'url', placeholder: 'e.g., https://example.com' },
+        { name: 'isUrgent', label: 'Urgent Task', type: 'checkbox' },
+        { name: 'priority', label: 'Priority', type: 'radio', options: ['Low', 'Medium', 'High'] },
+        { name: 'progress', label: 'Progress (%)', type: 'range', min: 0, max: 100 },
+        { name: 'attachment', label: 'Attachment', type: 'file', accept: 'application/pdf' },
+        { name: 'color', label: 'Color', type: 'color' },
+        { name: 'status', label: 'Status', type: 'select', options: ['Pending', 'In Progress', 'Completed'] },
+    ];
 
     return (
         <li className={`rounded p-3 shadow border-l-4 ${getStatusColor()}`}>
             {isEditing ? (
                 <div className="space-y-2">
-                    <ControlledInputField
-                        label="Task Title"
-                        value={editTitle}
-                        onChange={(value) => {
-                            setEditTitle(value);
-                            setTitleError(validateTitle(value));
-                        }}
-                        placeholder="Enter task title"
-                    />
-                    {titleError && (
-                        <div className="text-red-500 text-sm mt-1">{titleError}</div>
-                    )}
-                    <ControlledInputField
-                        label="Due Date"
-                        type="date"
-                        value={editDueDate}
-                        onChange={(value) => {
-                            setEditDueDate(value);
-                            setDueDateError(validateDueDate(value));
-                        }}
-                    />
-                    {dueDateError && (
-                        <div className="text-red-500 text-sm mt-1">{dueDateError}</div>
-                    )}
-                    <ControlledInputField
-                        label="Email"
-                        type="email"
-                        value={editEmail}
-                        onChange={(value) => {
-                            setEditEmail(value);
-                            setEmailError(validateEmail(value));
-                        }}
-                    />
-                    {emailError && (
-                        <div className="text-red-500 text-sm mt-1">{emailError}</div>
-                    )}
-                    {/*<ControlledInputField*/}
-                    {/*    label="Phone Number"*/}
-                    {/*    type="text"*/}
-                    {/*    value={editPhoneNumber}*/}
-                    {/*    onChange={(value) => {*/}
-                    {/*        setEditPhoneNumber(value);*/}
-                    {/*        setPhoneNumberError(validatePhoneNumber(value));*/}
-                    {/*    }}*/}
-                    {/*    placeholder="e.g., 123-456-7890 or +12345678901"*/}
-                    {/*/>*/}
-                    {/*{phoneNumberError && (*/}
-                    {/*    <div className="text-red-500 text-sm mt-1">{phoneNumberError}</div>*/}
-                    {/*)}*/}
-                    <ControlledInputField
-                        label="Phone Number"
-                        type="text"
-                        value={editPhoneNumber}
-                        onChange={(value) => {
-                            setEditPhoneNumber(value);
-                            setPhoneNumberError(validatePhoneNumber(value));
-                        }}
-                        placeholder="e.g., 123-456-7890 or +12345678901"
-                    />
-                    {phoneNumberError && (
-                        <div className="text-red-500 text-sm mt-1">{phoneNumberError}</div>
-                    )}
-                    <ControlledInputField
-                        label="URL"
-                        type="url"
-                        value={editUrl}
-                        onChange={(value) => {
-                            setEditUrl(value);
-                            setUrlError(validateUrl(value));
-                        }}
-                        placeholder="e.g., https://example.com"
-                    />
-                    {urlError && (
-                        <div className="text-red-500 text-sm mt-1">{urlError}</div>
-                    )}
-                    <div className="flex items-center">
-                        <input
-                            type="checkbox"
-                            checked={editIsUrgent}
-                            onChange={(e) => setEditIsUrgent(e.target.checked)}
-                            className="mr-2"
-                        />
-                        <label htmlFor="isUrgent" className="text-sm font-medium">
-                            Urgent Task
-                        </label>
-                    </div>
-                    <div className="space-y-2">
-                        <label className="block text-sm mb-1 font-medium">Priority</label>
-                        <div className="flex space-x-4">
-                            <label className="flex items-center">
-                                <input
-                                    type="radio"
-                                    name="priority"
-                                    value="Low"
-                                    checked={editPriority === 'Low'}
-                                    onChange={() => setEditPriority('Low')}
-                                    className="mr-1"
-                                />
-                                Low
-                            </label>
-                            <label className="flex items-center">
-                                <input
-                                    type="radio"
-                                    name="priority"
-                                    value="Medium"
-                                    checked={editPriority === 'Medium'}
-                                    onChange={() => setEditPriority('Medium')}
-                                    className="mr-1"
-                                />
-                                Medium
-                            </label>
-                            <label className="flex items-center">
-                                <input
-                                    type="radio"
-                                    name="priority"
-                                    value="High"
-                                    checked={editPriority === 'High'}
-                                    onChange={() => setEditPriority('High')}
-                                    className="mr-1"
-                                />
-                                High
-                            </label>
+                    {inputFields.map(({ name, label, type, placeholder, options, min, max, accept }) => (
+                        <div key={name}>
+                            <ControlledInputField
+                                label={label}
+                                name={name}
+                                value={editValues[name]}
+                                onChange={(value: string | boolean | number) => handleChange(name, value)}
+                                type={type}
+                                placeholder={placeholder}
+                                options={options}
+                                min={min}
+                                max={max}
+                                accept={accept}
+                            />
+                            {errors[name] && <div className="text-red-500 text-sm mt-1">{errors[name]}</div>}
                         </div>
-                        {priorityError && (
-                            <div className="text-red-500 text-sm mt-1">{priorityError}</div>
-                        )}
-                    </div>
-                    <select
-                        value={editStatus}
-                        onChange={(e) => setEditStatus(e.target.value as Task['status'])}
-                        className="w-full p-1 border rounded"
-                    >
-                        <option value="Pending">Pending</option>
-                        <option value="In Progress">In Progress</option>
-                        <option value="Completed">Completed</option>
-                    </select>
+                    ))}
                     <div className="flex space-x-2">
-                        <Button variant="primary" onClick={handleSave}>
+                        <Button variant="primary" type="submit" onClick={handleSave}>
                             Save
                         </Button>
-                        <Button
-                            variant="danger"
-                            onClick={() => {
-                                setIsEditing(false);
-                                setTitleError(null);
-                                setDueDateError(null);
-                                setEmailError(null);
-                                setPhoneNumberError(null);
-                                setUrlError(null);
-                                setEditTitle(task.title);
-                                setEditDueDate(task.dueDate);
-                                setEditStatus(task.status);
-                                setEditEmail(task.email);
-                                setEditPhoneNumber(task.phoneNumber);
-                                setEditUrl(task.url);
-                                setEditIsUrgent(task.isUrgent);
-                                setPriorityError(null);
-                                setEditPriority(task.priority);
-                            }}
-                        >
+                        <Button variant="danger" type="button" onClick={handleCancel}>
                             Cancel
                         </Button>
                     </div>
@@ -295,18 +169,52 @@ const TaskItem = ({ task, onEdit, onDelete }: Props) => {
             ) : (
                 <>
                     <div className="font-medium">{task.title}</div>
-                    <div className="text-sm text-gray-600">
-                        Status: {task.status} | Due: {task.dueDate}
+                    <div className="flex w-full py-0.5">
+                        <div className="text-sm w-1/2 text-gray-600">
+                            Status: {task.status} | Due: {task.dueDate}
+                        </div>
+                        <div className="text-sm w-1/2 text-gray-600">📧 Email: {task.email}</div>
                     </div>
-                    <div className="text-sm text-gray-600">📧 Email: {task.email}</div>
-                    <div className="text-sm text-gray-600">📞 Phone: {task.phoneNumber}</div>
-                    <div className="text-sm text-gray-600">🌐 URL: {task.url}</div>
-
-                    <div className="text-sm text-gray-600">
-                        🚨 Urgent: {task.isUrgent ? 'Yes' : 'No'}
+                    <div className="flex w-full py-0.5">
+                        <div className="text-sm w-1/2 text-gray-600">📞 Phone: {task.phoneNumber}</div>
+                        <div className="text-sm w-1/2 text-gray-600">🌐 URL: {task.url}</div>
                     </div>
-                    <div className="text-sm text-gray-600">📊 Priority: {task.priority}</div>
-                    <div className="mt-2 flex space-x-2">
+                    <div className="flex w-full py-0.5">
+                        <div className="text-sm w-1/2 text-gray-600">
+                            🚨 Urgent: {task.isUrgent ? 'Yes' : 'No'}
+                        </div>
+                        <div className="text-sm w-1/2 text-gray-600">📊 Priority: {task.priority}</div>
+                    </div>
+                    <div className="text-sm w-1/2">
+                        <span className="text-gray-600 mb-1 block">📈 Progress: {task.progress}%</span>
+                        <div className="w-full bg-gray-200 rounded h-2 overflow-hidden">
+                            <div
+                                className={`h-2.5 rounded-full transition-all duration-300 ${
+                                    task.progress < 30 ? 'bg-red-500' : task.progress < 70 ? 'bg-yellow-500' : 'bg-green-500'
+                                }`}
+                                style={{ width: `${task.progress}%` }}
+                            />
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2 my-1 text-sm">
+                        <span className="text-gray-600 flex items-center gap-2">
+                            🎨 Color: <span className="inline-block w-5 h-5 rounded" style={{ backgroundColor: task.color }}></span>
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                        <span className="text-blue-600 hover:underline">
+                            📎 Attachment:{' '}
+                            <a
+                                href={task.attachment}
+                                download={getFileNameFromDataUrl(task.attachment, task.id)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                Download {getFileNameFromDataUrl(task.attachment, task.id)}
+                            </a>
+                        </span>
+                    </div>
+                    <div className="mt-2 flex space-x-2 py-0.5">
                         <Button variant="secondary" onClick={() => setIsEditing(true)}>
                             Edit
                         </Button>
@@ -319,5 +227,4 @@ const TaskItem = ({ task, onEdit, onDelete }: Props) => {
         </li>
     );
 };
-
 export default TaskItem;

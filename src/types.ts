@@ -8,4 +8,7 @@ export interface Task {
     url: string;
     isUrgent: boolean;
     priority: 'Low' | 'Medium' | 'High';
+    progress: number;
+    attachment: string;
+    color: string;
 }

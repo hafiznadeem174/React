@@ -5,9 +5,9 @@ import type { Task } from '../types';
 import TaskItem from '../components/TaskItem';
 const TaskManager = () => {
     const [tasks, setTasks] = useState<Task[]>([
-        { id: '1', title: 'John Doe', status: 'Pending', dueDate: '2026-01-15', email: 'john@example.com', phoneNumber: '123-456-7890', url: 'https://johndoe.com',isUrgent: true,priority: 'High' },
-        { id: '2', title: 'Jane Smith', status: 'In Progress', dueDate: '2026-03-22', email: 'jane@example.com', phoneNumber: '+12345678901', url: 'https://janesmith.com',isUrgent: true, priority: 'Medium'},
-        { id: '3', title: 'Alice Johnson', status: 'Completed', dueDate: '2026-06-01', email: 'alice@example.com', phoneNumber: '987-654-3210', url: 'https://alicejohnson.com',isUrgent: true, priority: 'Low' },
+        { id: '1', title: 'John Doe', status: 'Pending', dueDate: '2026-01-15', email: 'john@example.com', phoneNumber: '123-456-7890', url: 'https://johndoe.com',isUrgent: true,priority: 'High', progress: 10 , attachment: 'data:application/pdf;base64,example1' , color: '#FF0000'},
+        { id: '2', title: 'Jane Smith', status: 'In Progress', dueDate: '2026-03-22', email: 'jane@example.com', phoneNumber: '+12345678901', url: 'https://janesmith.com',isUrgent: true, priority: 'Medium' , progress: 50 , attachment: 'data:application/pdf;base64,example2' , color: '#00FF00' },
+        { id: '3', title: 'Alice Johnson', status: 'Completed', dueDate: '2026-06-01', email: 'alice@example.com', phoneNumber: '987-654-3210', url: 'https://alicejohnson.com',isUrgent: true, priority: 'Low', progress: 100 , attachment: 'data:application/pdf;base64,example3' , color: '#0000FF' },
 
     ]);
     useEffect(() => {
@@ -31,12 +31,12 @@ const TaskManager = () => {
     };
     return (
         <div className="min-h-screen bg-gray-100 p-6">
-            <div className="w-full flex gap-6">
-                <div className="w-1/2">
+            <div className="w-full flex flex-col md:flex-row gap-6">
+                <div className="w-full md:w-1/2">
                     <h1 className="text-3xl font-bold mb-6 text-center">📝 Daily Task Manager</h1>
                     <TaskForm onAddTask={handleAddTask} />
                 </div>
-                <div className="w-1/2">
+                <div className="w-full md:w-1/2">
                     <h1 className="text-3xl font-bold mb-6 text-center">Your Tasks</h1>
                     <div className="mb-4">
                         <select

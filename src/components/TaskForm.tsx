@@ -1,8 +1,8 @@
-import { Formik, Form, Field } from 'formik';
+import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 import { v4 as uuidv4 } from 'uuid';
 import type { Task } from '../types';
-import InputField from './InputField';
+import InputField  from './InputField';
 import Button from './Button';
 interface TaskFormProps {
     onAddTask: (task: Task) => void;
@@ -37,10 +37,19 @@ const TaskSchema = Yup.object().shape({
     priority: Yup.string()
         .oneOf(['Low', 'Medium', 'High'], 'Invalid priority')
         .required('Priority is required'),
+    progress: Yup.number()
+        .min(0, 'Progress must be at least 0')
+        .max(100, 'Progress cannot exceed 100')
+        .required('Progress is required'),
+    attachment: Yup.string().required('Attachment is required'),
+    color: Yup.string()
+             .matches(/^#[0-9A-Fa-f]{6}$/, 'Invalid hex color (e.g., #FF0000)')
+             .required('Color is required'),
 });
 const TaskForm = ({ onAddTask }: TaskFormProps) => {
     return (
         <Formik
+
             initialValues={{
                 title: '',
                 dueDate: '',
@@ -50,6 +59,9 @@ const TaskForm = ({ onAddTask }: TaskFormProps) => {
                 url: '',
                 isUrgent: false, // New field
                 priority: 'Low',
+                progress: 0,
+                attachment: '',
+                color: '#000000',
             }}
             validationSchema={TaskSchema}
             onSubmit={(values, { resetForm }) => {
@@ -63,12 +75,17 @@ const TaskForm = ({ onAddTask }: TaskFormProps) => {
                     url: values.url,
                     isUrgent: values.isUrgent,
                     priority: values.priority as Task['priority'],
+                    progress: Number(values.progress),
+                    attachment: values.attachment,
+                    color: values.color,
+
                 };
                 onAddTask(newTask);
                 resetForm();
             }}
         >
-            <Form className="space-y-4 bg-white p-4 rounded shadow">
+            {({ values }) => (
+                <Form className="space-y-4 bg-white p-4 rounded shadow">
                 <InputField name="title" label="Task Title" />
                 <InputField name="email" label="Email" type="email" /> {/* ✅ NEW */}
                 <InputField name="dueDate" label="Due Date" type="date" />
@@ -84,43 +101,25 @@ const TaskForm = ({ onAddTask }: TaskFormProps) => {
                     type="url"
                     placeholder="e.g., https://example.com"
                 />
-                <div className="flex items-center">
-                    <Field
-                        type="checkbox"
-                        name="isUrgent"
-                        className="mr-2"
+                    <InputField name="isUrgent" label="Urgent Task" type="checkbox" />
+                    <InputField name="priority" label="Priority" />
+
+                    <InputField name="progress" label="Progress (%)" type="range" values={values} />
+                    <InputField name="attachment" label="Attachment" type="file" />
+                    <InputField name="color" label="Color" type="color" />
+                    <InputField
+                        name="status"
+                        label="Status"
+                        type="select"
+                        options={['Pending', 'In Progress', 'Completed']}
                     />
-                    <label htmlFor="isUrgent" className="text-sm font-medium">
-                        Urgent Task
-                    </label>
-                </div>
-                <div className="space-y-2">
-                    <label className="block text-sm mb-1 font-medium">Priority</label>
-                    <div className="flex space-x-4">
-                        <label className="flex items-center">
-                            <Field type="radio" name="priority" value="Low" className="mr-1" />
-                            Low
-                        </label>
-                        <label className="flex items-center">
-                            <Field type="radio" name="priority" value="Medium" className="mr-1" />
-                            Medium
-                        </label>
-                        <label className="flex items-center">
-                            <Field type="radio" name="priority" value="High" className="mr-1" />
-                            High
-                        </label>
+
+                    <div className="flex gap-2">
+                <Button type="reset" variant="danger">Cancel</Button>
+                    <Button type="submit" variant="primary">Add Task</Button>
                     </div>
-                </div>
-                <div>
-                    <label className="block text-sm mb-1 font-medium">Status</label>
-                    <Field as="select" name="status" className="w-full border p-2 rounded">
-                        <option value="Pending">Pending</option>
-                        <option value="In Progress">In Progress</option>
-                        <option value="Completed">Completed</option>
-                    </Field>
-                </div>
-                <Button type="submit" variant="primary">Add Task</Button>
             </Form>
+            )}
         </Formik>
     );
 };
