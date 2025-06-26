@@ -3,12 +3,56 @@ import { useEffect, useState } from 'react';
 import TaskForm from '../components/TaskForm';
 import type { Task } from '../types';
 import TaskItem from '../components/TaskItem';
+import sixfood from '../assets/Image/sixfood.webp';
+import sevenfood from '../assets/Image/sevenfood.webp';
+
 const TaskManager = () => {
     const [tasks, setTasks] = useState<Task[]>([
-        { id: '1', title: 'John Doe', status: 'Pending', dueDate: '2026-01-15', email: 'john@example.com', phoneNumber: '123-456-7890', url: 'https://johndoe.com',isUrgent: true,priority: 'High', progress: 10 , attachment: 'data:application/pdf;base64,example1' , color: '#FF0000'},
-        { id: '2', title: 'Jane Smith', status: 'In Progress', dueDate: '2026-03-22', email: 'jane@example.com', phoneNumber: '+12345678901', url: 'https://janesmith.com',isUrgent: true, priority: 'Medium' , progress: 50 , attachment: 'data:application/pdf;base64,example2' , color: '#00FF00' },
-        { id: '3', title: 'Alice Johnson', status: 'Completed', dueDate: '2026-06-01', email: 'alice@example.com', phoneNumber: '987-654-3210', url: 'https://alicejohnson.com',isUrgent: true, priority: 'Low', progress: 100 , attachment: 'data:application/pdf;base64,example3' , color: '#0000FF' },
-
+        {
+            id: '1',
+            title: 'John Doe',
+            status: 'Pending',
+            dueDate: '2026-01-15',
+            email: 'john@example.com',
+            phoneNumber: '123-456-7890',
+            url: 'https://johndoe.com',
+            isUrgent: true,
+            priority: 'High',
+            progress: 10 ,
+            attachment: 'data:application/pdf;base64,example1' ,
+            image: sixfood,
+            color: '#FF0000'
+        },
+        {
+            id: '2',
+            title: 'Jane Smith',
+            status: 'In Progress',
+            dueDate: '2026-03-22',
+            email: 'jane@example.com',
+            phoneNumber: '+12345678901',
+            url: 'https://janesmith.com',
+            isUrgent: true,
+            priority: 'Medium' ,
+            progress: 50 ,
+            attachment: 'data:application/pdf;base64,example2' ,
+            image: sevenfood,
+            color: '#00FF00'
+        },
+        {
+            id: '3',
+            title: 'Alice Johnson',
+            status: 'Completed',
+            dueDate: '2026-06-01',
+            email: 'alice@example.com',
+            phoneNumber: '987-654-3210',
+            url: 'https://alicejohnson.com',
+            isUrgent: true,
+            priority: 'Low',
+            progress: 100 ,
+            attachment: 'data:application/pdf;base64,example3' ,
+            image: sixfood,
+            color: '#0000FF'
+        },
     ]);
     useEffect(() => {
         localStorage.setItem('tasks', JSON.stringify(tasks));

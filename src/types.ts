@@ -10,5 +10,6 @@ export interface Task {
     priority: 'Low' | 'Medium' | 'High';
     progress: number;
     attachment: string;
+    image: string;
     color: string;
 }

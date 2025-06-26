@@ -45,6 +45,8 @@ const TaskSchema = Yup.object().shape({
     color: Yup.string()
              .matches(/^#[0-9A-Fa-f]{6}$/, 'Invalid hex color (e.g., #FF0000)')
              .required('Color is required'),
+    image: Yup.string().required('Image is required'),
+
 });
 const TaskForm = ({ onAddTask }: TaskFormProps) => {
     return (
@@ -61,6 +63,7 @@ const TaskForm = ({ onAddTask }: TaskFormProps) => {
                 priority: 'Low',
                 progress: 0,
                 attachment: '',
+                image: '',
                 color: '#000000',
             }}
             validationSchema={TaskSchema}
@@ -77,6 +80,7 @@ const TaskForm = ({ onAddTask }: TaskFormProps) => {
                     priority: values.priority as Task['priority'],
                     progress: Number(values.progress),
                     attachment: values.attachment,
+                    image: values.image,
                     color: values.color,
 
                 };
@@ -106,7 +110,11 @@ const TaskForm = ({ onAddTask }: TaskFormProps) => {
 
                     <InputField name="progress" label="Progress (%)" type="range" values={values} />
                     <InputField name="attachment" label="Attachment" type="file" />
+
                     <InputField name="color" label="Color" type="color" />
+                    <InputField name="image" label="Upload Image" type="image" />
+
+
                     <InputField
                         name="status"
                         label="Status"

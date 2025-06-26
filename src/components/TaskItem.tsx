@@ -64,6 +64,12 @@ const TaskItem = ({ task, onEdit, onDelete }: Props) => {
                     return 'Only PDF files are allowed';
                 return null;
             }
+            case 'image': {
+                const image = value as string;
+                if (!image) return 'Image is required';
+                if (!image.startsWith('data:image/')) return 'Only image files are allowed';
+                return null;
+            }
             case 'color': {
                 const color = value as string;
                 if (!color) return 'Color is required';
@@ -132,6 +138,7 @@ const TaskItem = ({ task, onEdit, onDelete }: Props) => {
         { name: 'priority', label: 'Priority', type: 'radio', options: ['Low', 'Medium', 'High'] },
         { name: 'progress', label: 'Progress (%)', type: 'range', min: 0, max: 100 },
         { name: 'attachment', label: 'Attachment', type: 'file', accept: 'application/pdf' },
+        { name: 'image', label: 'Image Upload', type: 'file', accept: 'image/*' },
         { name: 'color', label: 'Color', type: 'color' },
         { name: 'status', label: 'Status', type: 'select', options: ['Pending', 'In Progress', 'Completed'] },
     ];
@@ -196,11 +203,8 @@ const TaskItem = ({ task, onEdit, onDelete }: Props) => {
                             />
                         </div>
                     </div>
-                    <div className="flex items-center gap-2 my-1 text-sm">
-                        <span className="text-gray-600 flex items-center gap-2">
-                            🎨 Color: <span className="inline-block w-5 h-5 rounded" style={{ backgroundColor: task.color }}></span>
-                        </span>
-                    </div>
+
+
                     <div className="flex items-center gap-2 text-sm">
                         <span className="text-blue-600 hover:underline">
                             📎 Attachment:{' '}
@@ -214,6 +218,23 @@ const TaskItem = ({ task, onEdit, onDelete }: Props) => {
                             </a>
                         </span>
                     </div>
+                    <div className="flex items-center gap-2 my-1 text-sm">
+                        <span className="text-gray-600 flex items-center gap-2">
+                            🎨 Color: <span className="inline-block w-5 h-5 rounded" style={{ backgroundColor: task.color }}></span>
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-2 mt-2 text-sm">
+                        {(isEditing ? editValues.image : task.image) && (
+                            <img
+                                src={isEditing ? editValues.image : task.image}
+                                alt="Task"
+                                className="h-20 w-20 object-cover rounded border"
+                            />
+                        )}
+                    </div>
+
+
+
                     <div className="mt-2 flex space-x-2 py-0.5">
                         <Button variant="secondary" onClick={() => setIsEditing(true)}>
                             Edit

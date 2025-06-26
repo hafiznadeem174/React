@@ -117,6 +117,45 @@ const InputField = ({
         );
     }
 
+    // Handle image upload and preview
+    if (type === 'image') {
+        return (
+            <div className="space-y-2 mb-4">
+                <label htmlFor={name} className="block text-sm font-medium">{label}</label>
+                <Field name={name}>
+                    {({ form }: { form: any }) => (
+                        <>
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                        const reader = new FileReader();
+                                        reader.onload = () => {
+                                            form.setFieldValue(name, reader.result);
+                                        };
+                                        reader.readAsDataURL(file);
+                                    }
+                                }}
+                                className="w-full border p-2 rounded"
+                            />
+                            {form.values[name] && (
+                                <img
+                                    src={form.values[name]}
+                                    alt="Preview"
+                                    className="h-20 w-20 object-cover border mt-2"
+                                />
+                            )}
+                        </>
+                    )}
+                </Field>
+                <ErrorMessage name={name} component="div" className="text-red-500 text-sm mt-1" />
+            </div>
+        );
+    }
+
+
     // Handle color picker
     if (type === 'color') {
         return (
